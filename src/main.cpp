@@ -397,6 +397,13 @@ void parseJson(WiFiClient& client) {
   if (error) {
     Serial.print("deserializeJson() failed: ");
     Serial.println(error.c_str());
+
+    if (strcmp(error.c_str(), "IncompleteInput") == 0) {
+      // retry
+      delay(interval);
+      getPositions();
+    }
+
     return;
   }
 

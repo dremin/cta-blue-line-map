@@ -1,14 +1,23 @@
-# CTA Blue Line Train Map
+# CTA Blue Line Map
 
 This is a project to display live train status of the CTA Blue Line on a strip map, using an ESP32, RGB LEDs, and PCA9865 PWM drivers.
+
+## Pre-requisites
+
+* Visual Studio Code
+  * Platform IO extension installed
+* ESP32 development board
+* 7x PCA9865 PWM driver boards
+* 33x RGB LEDs, connected in RGB order, starting with the Forest Park LED.
+* [CTA Train Tracker API key](https://www.transitchicago.com/developers/traintrackerapply/)
 
 ## Instructions
 
 1. Clone this repository and change to its directory:
 
 ```
-git clone https://github.com/dremin/cta-blue-line-train-map.git
-cd cta-blue-line-train-map
+git clone https://github.com/dremin/cta-blue-line-map.git
+cd cta-blue-line-map
 ```
 
 2. Create the secrets file:
