@@ -104,7 +104,8 @@ enum Classification {
   CermakRun = 3,
   BothDirections = 4,
   JPBound = 5,
-  UICBound = 6
+  UICBound = 6,
+  HolidayTrain = 7
 };
 Classification trainState[numStations] = {};
 
@@ -308,6 +309,10 @@ void displayTrains() {
         if (debug) Serial.print("Trains each direction  ");
         setRgb(useLed, 255, 0, 255);
         break;
+      case HolidayTrain:
+        if (debug) Serial.print("Holiday train          ");
+        setRgb(useLed, 255, 80, 255);
+        break;
     }
 
     if (debug) {
@@ -505,6 +510,11 @@ Classification getTrainClassification(const char* run, const char* destStation, 
   // 5000-series from 54/Cermak
   if (strlen(run) > 0 && run[0] == '3') {
     return CermakRun;
+  }
+
+  // Holiday Train (same color as 5000s for now)
+  if (strcmp(run, "1225") == 0) {
+    return HolidayTrain;
   }
 
   // O'Hare
