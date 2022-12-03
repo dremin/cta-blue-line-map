@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include <WiFi.h>
-#include <Adafruit_PWMServoDriver.h>
+#include <FastLED.h>
 #include <ArduinoJson.h>
 #include "secrets.h"
 
@@ -13,17 +13,8 @@ const int interval = 10000;
 // LED parameters
 const int brightness = 100; // max 100
 const int maxLeds = 2;
-
-// Primary PWM driver
-Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
-
-// TODO: Daisy chained PWM drivers
-Adafruit_PWMServoDriver pwm2 = Adafruit_PWMServoDriver(0x41);
-Adafruit_PWMServoDriver pwm3 = Adafruit_PWMServoDriver(0x42);
-Adafruit_PWMServoDriver pwm4 = Adafruit_PWMServoDriver(0x43);
-Adafruit_PWMServoDriver pwm5 = Adafruit_PWMServoDriver(0x44);
-Adafruit_PWMServoDriver pwm6 = Adafruit_PWMServoDriver(0x45);
-Adafruit_PWMServoDriver pwm7 = Adafruit_PWMServoDriver(0x46);
+const int dataPin = 23;
+const int clockPin = 22;
 
 const char* stations[] = {
   "40390", // Forest Park
@@ -108,6 +99,7 @@ enum Classification {
   HolidayTrain = 7
 };
 Classification trainState[numStations] = {};
+CRGB leds[maxLeds];
 
 
 // prototype functions so we can reference them anywhere
@@ -121,8 +113,6 @@ void parseTrain(JsonObject train);
 int getStationIndex(const char* station);
 Classification getTrainClassification(const char* run, const char* destStation, const char* destName);
 void displayTrains();
-uint8_t getLedForDriver(uint8_t ledNum);
-Adafruit_PWMServoDriver getDriverForLed(uint8_t ledNum);
 
 
 
@@ -138,22 +128,7 @@ void setup() {
   connectWiFi();
 
 
-  pwm.begin();
-  pwm.setPWMFreq(1600);  // This is the maximum PWM frequency
-
-  // TODO: Init the other PWMs
-  /*pwm2.begin();
-  pwm2.setPWMFreq(1600);
-  pwm3.begin();
-  pwm3.setPWMFreq(1600);
-  pwm4.begin();
-  pwm4.setPWMFreq(1600);
-  pwm5.begin();
-  pwm5.setPWMFreq(1600);
-  pwm6.begin();
-  pwm6.setPWMFreq(1600);
-  pwm7.begin();
-  pwm7.setPWMFreq(1600);*/
+  FastLED.addLeds<APA102, dataPin, clockPin, BGR>(leds, maxLeds);
 }
 
 void loop() {
@@ -243,12 +218,7 @@ void turnOffRgb(uint8_t ledNum) {
     return;
   }
 
-  uint8_t actualLedNum = getLedForDriver(ledNum);
-  Adafruit_PWMServoDriver driver = getDriverForLed(ledNum);
-
-  driver.setPWM(actualLedNum, 0, 0);
-  driver.setPWM(actualLedNum + 1, 0, 0);
-  driver.setPWM(actualLedNum + 2, 0, 0);
+  leds[ledNum] = CRGB::Black;
 }
 
 void setRgb(uint8_t ledNum, uint8_t red, uint8_t green, uint8_t blue) {
@@ -256,17 +226,7 @@ void setRgb(uint8_t ledNum, uint8_t red, uint8_t green, uint8_t blue) {
     return;
   }
 
-  uint8_t actualLedNum = getLedForDriver(ledNum);
-  Adafruit_PWMServoDriver driver = getDriverForLed(ledNum);
-
-  uint16_t redPwm = 4095 * ((double)red / 255) * ((double)brightness / 100);
-  uint16_t greenPwm = 4095 * ((double)green / 255) * ((double)brightness / 100);
-  uint16_t bluePwm = 4095 * ((double)blue / 255) * ((double)brightness / 100);
-
-  // For each LED, the first leg is red, second is green, third is blue
-  driver.setPWM(actualLedNum, 0, redPwm);
-  driver.setPWM(actualLedNum + 1, 0, greenPwm);
-  driver.setPWM(actualLedNum + 2, 0, bluePwm);
+  leds[ledNum].setRGB(red, green, blue);
 }
 
 void displayTrains() {
@@ -321,65 +281,7 @@ void displayTrains() {
       Serial.println(")");
     }
   }
-}
-
-uint8_t getLedForDriver(uint8_t ledNum) {
-  // ledNum is provided with the assumption each LED is one, not three, so calculate the actual value
-  // each driver can handle 5 RGB LEDs
-
-  if (ledNum < 5) {
-    return ledNum * 3;
-  }
-
-  if (ledNum < 10) {
-    return (ledNum - 5) * 3;
-  }
-
-  if (ledNum < 15) {
-    return (ledNum - 10) * 3;
-  }
-
-  if (ledNum < 20) {
-    return (ledNum - 15) * 3;
-  }
-
-  if (ledNum < 25) {
-    return (ledNum - 20) * 3;
-  }
-
-  if (ledNum < 30) {
-    return (ledNum - 25) * 3;
-  }
-
-  return (ledNum - 30) * 3;
-}
-
-Adafruit_PWMServoDriver getDriverForLed(uint8_t ledNum) {
-  if (ledNum < 5) {
-    return pwm;
-  }
-
-  if (ledNum < 10) {
-    return pwm2;
-  }
-
-  if (ledNum < 15) {
-    return pwm3;
-  }
-
-  if (ledNum < 20) {
-    return pwm4;
-  }
-
-  if (ledNum < 25) {
-    return pwm5;
-  }
-
-  if (ledNum < 30) {
-    return pwm6;
-  }
-
-  return pwm7;
+  FastLED.show();
 }
 
 // Parsing functions
