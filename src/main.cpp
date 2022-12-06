@@ -101,11 +101,12 @@ enum Classification {
   NoTrain = 0,
   OHareBound = 1,
   FPBound = 2,
-  CermakRun = 3,
-  BothDirections = 4,
-  JPBound = 5,
-  UICBound = 6,
-  HolidayTrain = 7
+  Series5000 = 3,
+  Series7000 = 4,
+  BothDirections = 5,
+  JPBound = 6,
+  UICBound = 7,
+  HolidayTrain = 8
 };
 Classification trainState[numStations] = {};
 
@@ -285,8 +286,12 @@ void displayTrains() {
         if (debug) Serial.print("No train               ");
         turnOffRgb(useLed);
         break;
-      case CermakRun:
+      case Series5000:
         if (debug) Serial.print("5000-series train      ");
+        setRgb(useLed, 0, 80, 0);
+        break;
+      case Series7000:
+        if (debug) Serial.print("7000-series train      ");
         setRgb(useLed, 0, 80, 0);
         break;
       case OHareBound:
@@ -509,10 +514,10 @@ int getStationIndex(const char* station) {
 Classification getTrainClassification(const char* run, const char* destStation, const char* destName) {
   // 5000-series from 54/Cermak
   if (strlen(run) > 0 && run[0] == '3') {
-    return CermakRun;
+    return Series5000;
   }
 
-  // Holiday Train (same color as 5000s for now)
+  // Holiday Train
   if (strcmp(run, "1225") == 0) {
     return HolidayTrain;
   }
@@ -525,6 +530,11 @@ Classification getTrainClassification(const char* run, const char* destStation, 
   // Forest Park
   if (strcmp(destStation, "30077") == 0 || strcmp(destName, "Forest Park") == 0) {
     return FPBound;
+  }
+  
+  // 7000-series test run if 112 is a short turn
+  if (strcmp(run, "112") == 0) {
+    return Series7000;
   }
 
   // Jefferson Park, Rosemont
