@@ -2,6 +2,7 @@
 #include <WiFi.h>
 #include <FastLED.h>
 #include <ArduinoJson.h>
+#include "time.h"
 #include "secrets.h"
 
 const bool debug = true;
@@ -15,6 +16,11 @@ const int brightness = 100; // max 100
 const int maxLeds = 2;
 const int dataPin = 23;
 const int clockPin = 22;
+
+// Time parameters
+const char* ntpServer = "pool.ntp.org";
+const long gmtOffset_sec = -21600; // Chicago
+const int daylightOffset_sec = 3600;
 
 const char* stations[] = {
   "40390", // Forest Park
@@ -92,11 +98,12 @@ enum Classification {
   NoTrain = 0,
   OHareBound = 1,
   FPBound = 2,
-  CermakRun = 3,
-  BothDirections = 4,
-  JPBound = 5,
-  UICBound = 6,
-  HolidayTrain = 7
+  Series5000 = 3,
+  Series7000 = 4,
+  BothDirections = 5,
+  JPBound = 6,
+  UICBound = 7,
+  HolidayTrain = 8
 };
 Classification trainState[numStations] = {};
 CRGB leds[maxLeds];
@@ -126,6 +133,8 @@ void setup() {
   
 
   connectWiFi();
+  
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 
 
   FastLED.addLeds<APA102, dataPin, clockPin, BGR>(leds, maxLeds);
@@ -245,8 +254,12 @@ void displayTrains() {
         if (debug) Serial.print("No train               ");
         turnOffRgb(useLed);
         break;
-      case CermakRun:
+      case Series5000:
         if (debug) Serial.print("5000-series train      ");
+        setRgb(useLed, 0, 80, 0);
+        break;
+      case Series7000:
+        if (debug) Serial.print("7000-series train      ");
         setRgb(useLed, 0, 80, 0);
         break;
       case OHareBound:
@@ -385,6 +398,11 @@ void parseTrain(JsonObject train) {
       }
       break;
   }
+  
+  // Non-directional classifications take precedence
+  if (trainClass == Series5000 || trainClass == Series7000 || trainClass == HolidayTrain) {
+    trainState[ledIndex] = trainClass;
+  }
 }
 
 // Train helper functions
@@ -411,12 +429,22 @@ int getStationIndex(const char* station) {
 Classification getTrainClassification(const char* run, const char* destStation, const char* destName) {
   // 5000-series from 54/Cermak
   if (strlen(run) > 0 && run[0] == '3') {
-    return CermakRun;
+    return Series5000;
   }
 
-  // Holiday Train (same color as 5000s for now)
+  // Holiday Train
   if (strcmp(run, "1225") == 0) {
     return HolidayTrain;
+  }
+  
+  // 7000-series test run in the morning is usually 112 currently
+  if (strcmp(run, "112") == 0) {
+    struct tm timeinfo;
+    if(!getLocalTime(&timeinfo)){
+      Serial.println("Failed to obtain time");
+    } else if (timeinfo.tm_hour < 12) {
+      return Series7000;
+    }
   }
 
   // O'Hare
