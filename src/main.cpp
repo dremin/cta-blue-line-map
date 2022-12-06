@@ -2,6 +2,7 @@
 #include <WiFi.h>
 #include <Adafruit_PWMServoDriver.h>
 #include <ArduinoJson.h>
+#include "time.h"
 #include "secrets.h"
 
 const bool debug = true;
@@ -13,6 +14,11 @@ const int interval = 10000;
 // LED parameters
 const int brightness = 100; // max 100
 const int maxLeds = 2;
+
+// Time parameters
+const char* ntpServer = "pool.ntp.org";
+const long gmtOffset_sec = -21600; // Chicago
+const int daylightOffset_sec = 3600;
 
 // Primary PWM driver
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
@@ -137,6 +143,8 @@ void setup() {
   
 
   connectWiFi();
+  
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 
 
   pwm.begin();
@@ -488,6 +496,11 @@ void parseTrain(JsonObject train) {
       }
       break;
   }
+  
+  // Non-directional classifications take precedence
+  if (trainClass == Series5000 || trainClass == Series7000 || trainClass == HolidayTrain) {
+    trainState[ledIndex] = trainClass;
+  }
 }
 
 // Train helper functions
@@ -521,6 +534,16 @@ Classification getTrainClassification(const char* run, const char* destStation, 
   if (strcmp(run, "1225") == 0) {
     return HolidayTrain;
   }
+  
+  // 7000-series test run in the morning is usually 112 currently
+  if (strcmp(run, "112") == 0) {
+    struct tm timeinfo;
+    if(!getLocalTime(&timeinfo)){
+      Serial.println("Failed to obtain time");
+    } else if (timeinfo.tm_hour < 12) {
+      return Series7000;
+    }
+  }
 
   // O'Hare
   if (strcmp(destStation, "30171") == 0 || strcmp(destName, "O'Hare") == 0) {
@@ -530,11 +553,6 @@ Classification getTrainClassification(const char* run, const char* destStation, 
   // Forest Park
   if (strcmp(destStation, "30077") == 0 || strcmp(destName, "Forest Park") == 0) {
     return FPBound;
-  }
-  
-  // 7000-series test run if 112 is a short turn
-  if (strcmp(run, "112") == 0) {
-    return Series7000;
   }
 
   // Jefferson Park, Rosemont
