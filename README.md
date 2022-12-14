@@ -33,7 +33,7 @@ cp secrets.h.example secrets.h
 
 5. Connect the ESP32 via USB, then upload!
 
-## LED Colors
+## LED colors
 
 The first LED represents O'Hare. Each station's LED will display a different color, depending on the train(s) at the station:
 
@@ -43,12 +43,10 @@ The first LED represents O'Hare. Each station's LED will display a different col
 - **Trains in both directions**: Purple
 - **Jefferson Park-bound train**: Blue-Green
 - **UIC-Halsted-bound train**: Red-Green
-- **5000-series or 7000-series train**: Green
-- **Holiday Train**: White
+- **5000-series train**: Green
+- **Holiday train**: White
 
-Non-directional indicators (5000/7000-series or holiday train) take precedence when other trains are at the same station.
-
-Because the CTA Train Tracker API does not expose railcar numbers, 7000-series railcar indicators are a "best guess" based on observations. Currently, that is run #112 in the morning.
+Non-directional indicators (5000-series or holiday train) take precedence when other trains are at the same station.
 
 ## Wiring diagram
 

@@ -438,15 +438,17 @@ Classification getTrainClassification(const char* run, const char* destStation, 
     return HolidayTrain;
   }
   
-  // 7000-series test run in the morning is usually 112 currently
-  if (strcmp(run, "112") == 0) {
+  // 7000-series test run was in the morning on certain runs
+  // Now that they are in regular service, it is no longer predictable
+  // Keeping the code around for now, just in case :)
+  /*if (strcmp(run, "112") == 0) {
     struct tm timeinfo;
     if(!getLocalTime(&timeinfo)){
       Serial.println("Failed to obtain time");
     } else if (timeinfo.tm_hour < 12) {
       return Series7000;
     }
-  }
+  }*/
 
   // O'Hare
   if (strcmp(destStation, "30171") == 0 || strcmp(destName, "O'Hare") == 0) {
