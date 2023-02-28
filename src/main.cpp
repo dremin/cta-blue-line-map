@@ -126,7 +126,7 @@ void webRequest(char* host, String url);
 void parseJson(WiFiClient& input);
 void parseTrain(JsonObject train);
 int getStationIndex(const char* station);
-Classification getTrainClassification(const char* run, const char* destStation, const char* destName);
+Classification getTrainClassification(const char* run, const char* destStation, const char* destName, const char* direction);
 void displayTrains();
 uint8_t getLedForDriver(uint8_t ledNum);
 Adafruit_PWMServoDriver getDriverForLed(uint8_t ledNum);
@@ -461,7 +461,7 @@ void parseTrain(JsonObject train) {
     return;
   }
 
-  Classification trainClass = getTrainClassification(run, destStation, destName);
+  Classification trainClass = getTrainClassification(run, destStation, destName, direction);
 
   if (strcmp(isApp, "0") == 0) {
     // not approaching; use previous station
@@ -524,7 +524,7 @@ int getStationIndex(const char* station) {
   return -1;
 }
 
-Classification getTrainClassification(const char* run, const char* destStation, const char* destName) {
+Classification getTrainClassification(const char* run, const char* destStation, const char* destName, const char* direction) {
   // 5000-series from 54/Cermak
   if (strlen(run) > 0 && run[0] == '3') {
     return Series5000;
@@ -533,16 +533,6 @@ Classification getTrainClassification(const char* run, const char* destStation, 
   // Holiday Train
   if (strcmp(run, "1225") == 0) {
     return HolidayTrain;
-  }
-  
-  // 7000-series test run in the morning is usually 112 currently
-  if (strcmp(run, "112") == 0) {
-    struct tm timeinfo;
-    if(!getLocalTime(&timeinfo)){
-      Serial.println("Failed to obtain time");
-    } else if (timeinfo.tm_hour < 12) {
-      return Series7000;
-    }
   }
 
   // O'Hare
@@ -567,7 +557,10 @@ Classification getTrainClassification(const char* run, const char* destStation, 
 
   Serial.print("Defaulting on destination ");
   Serial.println(destStation);
-
-  // default to O'Hare
-  return OHareBound;
+  
+  if (strcmp(direction, "5") == 0) {
+    return FPBound;
+  } else {
+    return OHareBound;
+  }
 }
