@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <WiFi.h>
+#include <HTTPClient.h>
 #include <FastLED.h>
 #include <ArduinoJson.h>
 #include "time.h"
@@ -114,8 +115,8 @@ void connectWiFi();
 void turnOffRgb(uint8_t ledNum);
 void setRgb(uint8_t ledNum, uint8_t red, uint8_t green, uint8_t blue);
 void getPositions();
-void webRequest(char* host, String url);
-void parseJson(WiFiClient& input);
+void webRequest(String url);
+void parseJson(HTTPClient& client);
 void parseTrain(JsonObject train);
 int getStationIndex(const char* station);
 Classification getTrainClassification(const char* run, const char* destStation, const char* destName, const char* direction);
@@ -145,6 +146,11 @@ void loop() {
   if (debug) {
     Serial.print("IP address: ");
     Serial.println(WiFi.localIP());
+  }
+  
+  if (WiFi.status() != WL_CONNECTED) {
+    // disconnected; attempt reconnect
+    connectWiFi();
   }
 
   getPositions();
@@ -182,43 +188,33 @@ void connectWiFi() {
   Serial.println(WiFi.localIP());
 }
 
-void webRequest(char* host, String url) {
+void webRequest(String url) {
   WiFiClient client;
-  const int httpPort = 80;
-  if (!client.connect(host, httpPort)) {
-    Serial.print("Connection failed to ");
-    Serial.println(host);
-    return;
-  }
+  HTTPClient http;
 
   if (debug) {
-    Serial.print("Requesting URL: http://");
-    Serial.print(host);
+    Serial.print("Requesting URL: ");
     Serial.println(url);
   }
-
-  // This will send the request to the server
-  client.print(String("GET ") + url + " HTTP/1.1\r\n" +
-                "Host: " + host + "\r\n" +
-                "Connection: close\r\n\r\n");
   
-  unsigned long startTime = millis();
-  while (client.available() == 0) {
-    if (millis() - startTime > timeout) {
-      Serial.println("Request timed out");
-      client.stop();
-      return;
+  // This will send the request to the server
+  http.useHTTP10(true);
+  http.begin(client, url);
+  int httpCode = http.GET();
+  
+  if (httpCode >= 200 && httpCode < 300) {
+    // request was successful
+    // reset state
+    for (int i = 0; i < numStations; i++) {
+      trainState[i] = NoTrain;
     }
+    // parse response
+    parseJson(http);
+  } else {
+    Serial.println("Request failed");
   }
-
-  // reset state
-  for (int i = 0; i < numStations; i++) {
-    trainState[i] = NoTrain;
-  }
-
-  while(client.available()) {
-    parseJson(client);
-  }
+  
+  http.end();
 }
 
 // LED helper functions
@@ -300,7 +296,7 @@ void displayTrains() {
 
 // Parsing functions
 
-void parseJson(WiFiClient& client) {
+void parseJson(HTTPClient& client) {
   StaticJsonDocument<192> filter;
 
   JsonObject filter_train = filter["ctatt"]["route"][0]["train"].createNestedObject();
@@ -313,7 +309,7 @@ void parseJson(WiFiClient& client) {
   filter_train["isApp"] = true;
 
   DynamicJsonDocument doc(6144);
-  DeserializationError error = deserializeJson(doc, client, DeserializationOption::Filter(filter));
+  DeserializationError error = deserializeJson(doc, client.getStream(), DeserializationOption::Filter(filter));
 
   if (error) {
     Serial.print("deserializeJson() failed: ");
@@ -409,12 +405,11 @@ void parseTrain(JsonObject train) {
 // Train helper functions
 
 void getPositions() {
-  char host[] = "lapi.transitchicago.com";
-  String url = "/api/1.0/ttpositions.aspx?key=";
+  String url = "http://lapi.transitchicago.com/api/1.0/ttpositions.aspx?key=";
   url += CTA_API_KEY;
   url += "&rt=blue&outputType=JSON";
-
-  webRequest(host, url);
+  
+  webRequest(url);
 }
 
 int getStationIndex(const char* station) {
