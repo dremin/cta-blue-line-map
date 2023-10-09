@@ -33,75 +33,75 @@ Adafruit_PWMServoDriver pwm6 = Adafruit_PWMServoDriver(0x45);
 Adafruit_PWMServoDriver pwm7 = Adafruit_PWMServoDriver(0x46);
 
 const char* stations[] = {
-  "40390", // Forest Park
-  "40980",
-  "40180",
-  "40010",
-  "40970",
-  "40920",
-  "40250",
-  "40220",
-  "40810",
-  "40470",
-  "40350",
-  "40430",
-  "41340",
-  "40070",
-  "40790",
-  "40370",
-  "40380",
-  "40490",
-  "41410",
-  "40320",
-  "40590",
-  "40670",
-  "40570",
-  "41020",
-  "40060",
-  "41240",
-  "40550",
-  "41330",
-  "41280",
-  "40750",
-  "40230",
+  "40890", // O'Hare
   "40820",
-  "40890" // O'Hare
+  "40230",
+  "40750",
+  "41280",
+  "41330",
+  "40550",
+  "41240",
+  "40060",
+  "41020",
+  "40570",
+  "40670",
+  "40590",
+  "40320",
+  "41410",
+  "40490",
+  "40380",
+  "40370",
+  "40790",
+  "40070",
+  "41340",
+  "40430",
+  "40350",
+  "40470",
+  "40810",
+  "40220",
+  "40250",
+  "40920",
+  "40970",
+  "40010",
+  "40180",
+  "40980",
+  "40390" // Forest Park
 };
 // Names are only used for debug output
 const char* stationNames[] = {
-  "Forest Park",
-  "Harlem (Forest Park Branch)",
-  "Oak Park",
-  "Austin",
-  "Cicero",
-  "Pulaski",
-  "Kedzie-Homan",
-  "Western (Forest Park Branch)",
-  "Illinois Medical District",
-  "Racine",
-  "UIC-Halsted",
-  "Clinton",
-  "LaSalle",
-  "Jackson",
-  "Monroe",
-  "Washington",
-  "Clark/Lake",
-  "Grand",
-  "Chicago",
-  "Division",
-  "Damen",
-  "Western (O'Hare Branch)",
-  "California",
-  "Logan Square",
-  "Belmont",
-  "Addison",
-  "Irving Park",
-  "Montrose",
-  "Jefferson Park",
-  "Harlem (O'Hare Branch)",
-  "Cumberland",
+  "O'Hare",
   "Rosemont",
-  "O'Hare"
+  "Cumberland",
+  "Harlem (O'Hare Branch)",
+  "Jefferson Park",
+  "Montrose",
+  "Irving Park",
+  "Addison",
+  "Belmont",
+  "Logan Square",
+  "California",
+  "Western (O'Hare Branch)",
+  "Damen",
+  "Division",
+  "Chicago",
+  "Grand",
+  "Clark/Lake",
+  "Washington",
+  "Monroe",
+  "Jackson",
+  "LaSalle",
+  "Clinton",
+  "UIC-Halsted",
+  "Racine",
+  "Illinois Medical District",
+  "Western (Forest Park Branch)",
+  "Kedzie-Homan",
+  "Pulaski",
+  "Cicero",
+  "Austin",
+  "Oak Park",
+  "Harlem (Forest Park Branch)",
+  "Forest Park",
 };
 const size_t numStations = sizeof(stations) / sizeof(stations[0]);
 enum Classification {
@@ -463,14 +463,14 @@ void parseTrain(JsonObject train) {
     // not approaching; use previous station
     // previous station depends on train direction
     if (strcmp(direction, "5") == 0) {
-      // Southbound, add 1 to index
-      if (ledIndex < numStations) {
-        ledIndex += 1;
-      }
-    } else {
-      // Northbound, remove 1
+      // Southbound, remove 1 from index
       if (ledIndex > 0) {
         ledIndex -= 1;
+      }
+    } else {
+      // Northbound, add 1
+      if (ledIndex < numStations) {
+        ledIndex += 1;
       }
     }
   }
