@@ -2,6 +2,8 @@
 
 This is a project to display live train status of the CTA Blue Line on a strip map, using an ESP32 and APA102 addressable RGB LEDs.
 
+![Photo of the map](readme-photo.jpg)
+
 ## Pre-requisites
 
 * Visual Studio Code
