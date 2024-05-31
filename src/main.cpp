@@ -280,18 +280,6 @@ void displayTrains() {
 
     // Placeholder variable to allow testing on the wrong LED
     int useLed = i;
-    if (i == 0) {
-      useLed = 13;
-    }
-    if (i == 1) {
-      useLed = 12;
-    }
-    if (i == 13) {
-      useLed = 0;
-    }
-    if (i == 12) {
-      useLed = 1;
-    }
 
     switch (trainState[i]) {
       case NoTrain:
