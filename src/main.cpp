@@ -228,10 +228,6 @@ void webRequest(String url) {
   
   if (httpCode >= 200 && httpCode < 300) {
     // request was successful
-    // reset state
-    for (int i = 0; i < numStations; i++) {
-      trainState[i] = NoTrain;
-    }
     // parse response
     parseJson(http);
   } else {
@@ -284,6 +280,18 @@ void displayTrains() {
 
     // Placeholder variable to allow testing on the wrong LED
     int useLed = i;
+    if (i == 0) {
+      useLed = 13;
+    }
+    if (i == 1) {
+      useLed = 12;
+    }
+    if (i == 13) {
+      useLed = 0;
+    }
+    if (i == 12) {
+      useLed = 1;
+    }
 
     switch (trainState[i]) {
       case NoTrain:
@@ -412,13 +420,13 @@ void parseJson(HTTPClient& client) {
     Serial.print("deserializeJson() failed: ");
     Serial.println(error.c_str());
 
-    if (strcmp(error.c_str(), "IncompleteInput") == 0) {
-      // retry
-      delay(interval);
-      getPositions();
-    }
-
+    // retry
     return;
+  }
+  
+  // reset state
+  for (int i = 0; i < numStations; i++) {
+    trainState[i] = NoTrain;
   }
 
   for (JsonObject train : doc["ctatt"]["route"][0]["train"].as<JsonArray>()) {
