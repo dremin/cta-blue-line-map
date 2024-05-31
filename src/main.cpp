@@ -204,10 +204,6 @@ void webRequest(String url) {
   
   if (httpCode >= 200 && httpCode < 300) {
     // request was successful
-    // reset state
-    for (int i = 0; i < numStations; i++) {
-      trainState[i] = NoTrain;
-    }
     // parse response
     parseJson(http);
   } else {
@@ -315,13 +311,13 @@ void parseJson(HTTPClient& client) {
     Serial.print("deserializeJson() failed: ");
     Serial.println(error.c_str());
 
-    if (strcmp(error.c_str(), "IncompleteInput") == 0) {
-      // retry
-      delay(interval);
-      getPositions();
-    }
-
+    // retry
     return;
+  }
+
+  // reset state
+  for (int i = 0; i < numStations; i++) {
+    trainState[i] = NoTrain;
   }
 
   for (JsonObject train : doc["ctatt"]["route"][0]["train"].as<JsonArray>()) {
