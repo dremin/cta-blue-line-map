@@ -43,8 +43,8 @@ The first LED represents O'Hare. Each station's LED will display a different col
 - **O'Hare-bound train**: Blue
 - **Forest Park-bound train**: Red
 - **Trains in both directions**: Purple
-- **Jefferson Park-bound train**: Blue-Green
-- **UIC-Halsted-bound train**: Red-Green
+- **Jefferson Park-bound train**: Cyan
+- **UIC-Halsted-bound train**: Orange
 - **5000-series train**: Green
 - **Holiday train**: White
 

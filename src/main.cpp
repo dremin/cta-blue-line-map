@@ -265,11 +265,11 @@ void displayTrains() {
         break;
       case JPBound:
         if (debug) Serial.print("Jefferson Park-bound   ");
-        setRgb(useLed, 0, 80, 255);
+        setRgb(useLed, 0, 180, 255);
         break;
       case UICBound:
         if (debug) Serial.print("UIC-Halsted-bound train");
-        setRgb(useLed, 255, 80, 0);
+        setRgb(useLed, 255, 30, 0);
         break;
       case BothDirections:
         if (debug) Serial.print("Trains each direction  ");
